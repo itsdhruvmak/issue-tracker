@@ -17,15 +17,11 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Issue Tracker API", version="2.0.0")
 
-# Allow both local dev and deployed Vercel frontend
-allowed_origins = ["http://localhost:3000"]
-if settings.FRONTEND_URL and settings.FRONTEND_URL not in allowed_origins:
-    allowed_origins.append(settings.FRONTEND_URL)
-
+# Temporarily allow all origins — tighten after deployment is confirmed working
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
