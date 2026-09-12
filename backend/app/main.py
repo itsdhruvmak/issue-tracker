@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.config import settings
 from app.db.base_class import Base
 from app.db.session import engine
 from app.db import base  # noqa: F401 — imports all models so metadata is populated
@@ -16,10 +17,14 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Issue Tracker API", version="2.0.0")
 
-# Allow the Next.js frontend to call this API
+# Allow both local dev and deployed Vercel frontend
+allowed_origins = ["http://localhost:3000"]
+if settings.FRONTEND_URL and settings.FRONTEND_URL not in allowed_origins:
+    allowed_origins.append(settings.FRONTEND_URL)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
