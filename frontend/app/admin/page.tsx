@@ -14,6 +14,7 @@ import {
   ArrowLeft,
   UserCheck,
   UserX,
+  Building2,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -40,7 +41,7 @@ export default function AdminDashboardPage() {
     fetchUsers();
   }, []);
 
-  const handleRoleChange = async (userId: number, newRole: "admin" | "member") => {
+  const handleRoleChange = async (userId: number, newRole: string) => {
     try {
       setUpdatingId(userId);
       const updatedUser = await updateUserRoleApi(userId, newRole);
@@ -92,16 +93,14 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-xs self-start sm:self-auto">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Users className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="text-xl font-bold text-slate-900 leading-tight">
-                {users.length}
-              </div>
-              <div className="text-xs text-slate-500">Total Registered Users</div>
-            </div>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/admin/organizations"
+              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm shadow-sm transition-all"
+            >
+              <Building2 className="w-4 h-4" />
+              Manage Client Firms
+            </Link>
           </div>
         </div>
 
@@ -117,12 +116,12 @@ export default function AdminDashboardPage() {
           <div className="p-5 border-b border-slate-100 flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <Users className="w-4 h-4 text-blue-600" />
-              User Accounts & Roles
+              User Accounts & Roles ({users.length})
             </h2>
             <button
               onClick={fetchUsers}
               disabled={loading}
-              className="px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200"
+              className="px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200 cursor-pointer"
             >
               Refresh Table
             </button>
@@ -181,13 +180,13 @@ export default function AdminDashboardPage() {
                         <select
                           value={u.role}
                           disabled={updatingId === u.id}
-                          onChange={(e) =>
-                            handleRoleChange(u.id, e.target.value as "admin" | "member")
-                          }
-                          className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer"
+                          onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                          className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 transition-all cursor-pointer capitalize"
                         >
-                          <option value="member">Member</option>
-                          <option value="admin">Admin</option>
+                          <option value="internal_admin">Internal Admin</option>
+                          <option value="internal_member">Internal Member</option>
+                          <option value="org_admin">Org Admin</option>
+                          <option value="client_member">Client Member</option>
                         </select>
                       </td>
 

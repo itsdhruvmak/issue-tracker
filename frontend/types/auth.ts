@@ -1,4 +1,10 @@
-export type UserRole = "admin" | "member";
+export type UserRole =
+  | "internal_admin"
+  | "internal_member"
+  | "org_admin"
+  | "client_member"
+  | "admin"
+  | "member";
 
 export interface User {
   id: number;
@@ -6,6 +12,8 @@ export interface User {
   username: string;
   full_name?: string;
   role: UserRole;
+  organization_id?: number;
+  status?:string; //"pending" | "active"
   is_active: boolean;
   is_verified: boolean;
   created_at: string;

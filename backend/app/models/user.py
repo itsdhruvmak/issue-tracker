@@ -14,13 +14,16 @@ class User(Base):
     username         = Column(String, unique=True, index=True, nullable=False)
     full_name        = Column(String, nullable=True)
     hashed_password  = Column(String, nullable=False)
-    role             = Column(String, default="member")   # "admin" | "member"
+    role             = Column(String, default="member")   # "admin" | "member" | "org_admin" | "client_member"
+    organization_id  = Column(Integer, ForeignKey('organizations.id'), nullable=True)
+    status           = Column(String, default="active")  # "pending" | "active"
     is_active        = Column(Boolean, default=True)
     is_verified      = Column(Boolean, default=False)     # email verification gate
     created_at       = Column(DateTime(timezone=True), server_default=func.now())
     updated_at       = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
+    organization = relationship("Organization", back_populates="users")
     refresh_tokens      = relationship(
         "RefreshToken",
         back_populates="user",

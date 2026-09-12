@@ -3,14 +3,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, Shield, ChevronDown, CheckCircle2, LayoutDashboard } from "lucide-react";
+import { LogOut, Shield, ChevronDown, CheckCircle2, LayoutDashboard, Building2 } from "lucide-react";
 
 export default function UserDropdown() {
   const { user, isAuthenticated, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -41,7 +40,8 @@ export default function UserDropdown() {
   }
 
   const initial = (user.full_name || user.username || "U").charAt(0).toUpperCase();
-  const isAdmin = user.role === "admin";
+  const isInternalAdmin = user.role === "internal_admin" || user.role === "admin";
+  const isClientUser = user.role === "org_admin" || user.role === "client_member";
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -73,12 +73,12 @@ export default function UserDropdown() {
             <p className="text-xs text-slate-500 truncate">{user.email}</p>
             <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">
               <Shield className="w-3 h-3" />
-              <span className="capitalize">{user.role} Role</span>
+              <span className="capitalize">{user.role}</span>
             </div>
           </div>
 
           <div className="py-1">
-            {isAdmin && (
+            {isInternalAdmin && (
               <Link
                 href="/admin"
                 onClick={() => setIsOpen(false)}
@@ -86,6 +86,17 @@ export default function UserDropdown() {
               >
                 <LayoutDashboard className="w-4 h-4 text-blue-600" />
                 Admin Panel
+              </Link>
+            )}
+
+            {isClientUser && (
+              <Link
+                href="/client-dashboard"
+                onClick={() => setIsOpen(false)}
+                className="w-full px-4 py-2 text-left text-sm font-semibold text-blue-600 hover:bg-blue-50 flex items-center gap-2 transition-colors"
+              >
+                <Building2 className="w-4 h-4 text-blue-600" />
+                Client Dashboard
               </Link>
             )}
 

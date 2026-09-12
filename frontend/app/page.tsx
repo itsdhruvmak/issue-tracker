@@ -1,17 +1,51 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { getIssues } from "@/lib/api";
 import { Issue } from "@/types/issue";
 import IssueList from "@/components/IssueList";
-import { PlusCircle, CircleDot, Clock, CheckCircle2, Layers } from "lucide-react";
+import { PlusCircle, CircleDot, Clock, CheckCircle2, Layers, Loader2 } from "lucide-react";
 
-export const revalidate = 0; // ensure fresh data on load
+export default function HomePage() {
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function HomePage() {
-  let issues: Issue[] = [];
-  try {
-    issues = await getIssues();
-  } catch (error) {
-    console.error("Failed to load issues:", error);
+  const isClientUser = user?.role === "org_admin" || user?.role === "client_member";
+
+  useEffect(() => {
+    if (!authLoading) {
+      // 1. If not logged in, redirect to login page
+      if (!isAuthenticated) {
+        router.replace("/login");
+        return;
+      }
+
+      // 2. If client role, redirect to client portal
+      if (isClientUser) {
+        router.replace("/client-dashboard");
+        return;
+      }
+
+      // 3. Authenticated internal team: fetch issues
+      getIssues()
+        .then((data) => setIssues(data))
+        .catch((err) => console.error("Failed to load internal issues:", err))
+        .finally(() => setLoading(false));
+    }
+  }, [authLoading, isAuthenticated, isClientUser, router]);
+
+  if (authLoading || !isAuthenticated || isClientUser) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3 text-slate-500">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <span className="text-sm font-medium">Checking authorization...</span>
+      </div>
+    );
   }
 
   const openCount = issues.filter((i) => i.status === "open").length;
@@ -24,10 +58,10 @@ export default async function HomePage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            Issue Dashboard
+            Internal Issue Dashboard
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Track, assign, and resolve project bugs and requests.
+            Track, assign, and resolve project bugs and requests across client accounts.
           </p>
         </div>
 
@@ -95,8 +129,15 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* Main Issues List & Filters */}
-      <IssueList issues={issues} />
+      {/* Main Issues List */}
+      {loading ? (
+        <div className="p-12 text-center bg-white rounded-2xl border border-slate-200">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-3" />
+          <p className="text-slate-500 text-sm">Loading internal issues...</p>
+        </div>
+      ) : (
+        <IssueList issues={issues} />
+      )}
     </main>
   );
 }

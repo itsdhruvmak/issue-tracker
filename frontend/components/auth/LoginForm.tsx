@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth, getRedirectPath } from "@/context/AuthContext";
 import { LogIn, Mail, Lock, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
 export default function LoginForm() {
@@ -14,7 +14,7 @@ export default function LoginForm() {
   const { login } = useAuth();
 
   const [formData, setFormData] = useState({
-    username: "", // Email or Username
+    username: "", // Email
     password: "",
   });
 
@@ -34,8 +34,9 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      await login(formData);
-      router.push("/");
+      const loggedUser = await login(formData);
+      const destination = getRedirectPath(loggedUser.role);
+      router.push(destination);
     } catch (err: any) {
       setError(err.message || "Invalid login credentials");
     } finally {
@@ -50,7 +51,7 @@ export default function LoginForm() {
           <LogIn className="w-6 h-6" />
         </div>
         <h2 className="text-2xl font-bold text-slate-900 tracking-tight">Welcome Back</h2>
-        <p className="text-sm text-slate-500 mt-1">Sign in to your Issue Tracker account</p>
+        <p className="text-sm text-slate-500 mt-1">Sign in to your account</p>
       </div>
 
       {successMsg && (

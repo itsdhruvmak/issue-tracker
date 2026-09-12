@@ -12,6 +12,7 @@ class Issue(Base):
     description = Column(String, nullable=True)
     status      = Column(String, default="open")        # open / in_progress / closed
     priority    = Column(String, default="medium")      # low / medium / high
+    organization_id = Column(Integer, ForeignKey("organizations.id"), nullable=True)
 
     # Legacy free-text fields (kept for backward compatibility)
     reporter    = Column(String, nullable=True)
@@ -25,6 +26,8 @@ class Issue(Base):
     updated_at  = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
+    organization= relationship("Organization", back_populates="issues")
+
     attachments = relationship(
         "IssueAttachment",
         back_populates="issue",

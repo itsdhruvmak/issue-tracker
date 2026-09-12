@@ -1,3 +1,4 @@
+import hashlib
 from datetime import datetime, timedelta, timezone
 from jose import JWTError, jwt
 from passlib.context import CryptContext
@@ -17,7 +18,7 @@ def verify_password(plain: str, hashed: str) -> bool:
     return pwd_context.verify(plain, hashed)
 
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user_id: int, role: str = None, organization_id: int = None) -> str:
     """Create a short-lived JWT access token (30 min by default)."""
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
@@ -27,6 +28,10 @@ def create_access_token(user_id: int) -> str:
         "exp": expire,
         "type": "access",
     }
+    if role:
+        payload["role"] = role
+    if organization_id is not None:
+        payload["organization_id"] = organization_id
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
@@ -34,6 +39,13 @@ def create_refresh_token() -> str:
     """Generate a secure random opaque refresh token (stored in DB)."""
     return secrets.token_hex(64)
 
+def generate_invite_token() -> str:
+    """Generate an ungueassable random invite token (For link URL)."""
+    return secrets.token_urlsafe(32)
+
+def hash_token(token: str) -> str:
+    """Compute SHA-256 hash of an invite token for secure DB storage."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 def decode_access_token(token: str) -> dict:
     """

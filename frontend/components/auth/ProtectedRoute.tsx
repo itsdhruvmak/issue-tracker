@@ -14,15 +14,17 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
   const { user, isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
 
+  const isInternalAdmin = user?.role === "internal_admin" || user?.role === "admin";
+
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
         router.push("/login");
-      } else if (requireAdmin && user?.role !== "admin") {
+      } else if (requireAdmin && !isInternalAdmin) {
         router.push("/");
       }
     }
-  }, [isLoading, isAuthenticated, user, requireAdmin, router]);
+  }, [isLoading, isAuthenticated, user, requireAdmin, isInternalAdmin, router]);
 
   if (isLoading) {
     return (
@@ -33,7 +35,7 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
     );
   }
 
-  if (!isAuthenticated || (requireAdmin && user?.role !== "admin")) {
+  if (!isAuthenticated || (requireAdmin && !isInternalAdmin)) {
     return null;
   }
 

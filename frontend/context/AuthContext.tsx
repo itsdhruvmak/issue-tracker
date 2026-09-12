@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, LoginPayload, RegisterPayload, VerifyOTPPayload, ResendOTPPayload } from "@/types/auth";
+import { User, UserRole, LoginPayload, RegisterPayload, VerifyOTPPayload, ResendOTPPayload } from "@/types/auth";
 import {
   getMeApi,
   loginApi,
@@ -12,11 +12,22 @@ import {
 } from "@/lib/api";
 import { getAccessToken, clearTokens } from "@/lib/auth";
 
+export function getRedirectPath(role?: UserRole): string {
+  if (!role) return "/";
+  if (role === "org_admin" || role === "client_member") {
+    return "/client-dashboard";
+  }
+  if (role === "internal_admin" || role === "admin") {
+    return "/admin";
+  }
+  return "/";
+}
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (payload: LoginPayload) => Promise<void>;
+  login: (payload: LoginPayload) => Promise<User>;
   register: (payload: RegisterPayload) => Promise<User>;
   verifyOTP: (payload: VerifyOTPPayload) => Promise<string>;
   resendOTP: (payload: ResendOTPPayload) => Promise<string>;
@@ -53,11 +64,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetchCurrentUser();
   }, []);
 
-  const login = async (payload: LoginPayload) => {
+  const login = async (payload: LoginPayload): Promise<User> => {
     setIsLoading(true);
     try {
       await loginApi(payload);
-      await fetchCurrentUser();
+      const currentUser = await getMeApi();
+      setUser(currentUser);
+      return currentUser;
     } finally {
       setIsLoading(false);
     }

@@ -7,6 +7,9 @@ from app.db import base  # noqa: F401 — imports all models so metadata is popu
 from app.routers.issues import router as issues_router
 from app.routers.auth import router as auth_router
 from app.routers.admin import router as admin_router
+from app.routers.invites import router as invites_router
+from app.routers.client_team import router as client_team_router
+from app.routers.client_issues import router as client_issues_router
 from app import cloudinary_config  # noqa: F401 — initializes cloudinary on startup
 
 Base.metadata.create_all(bind=engine)
@@ -25,6 +28,9 @@ app.add_middleware(
 app.include_router(issues_router)
 app.include_router(auth_router)
 app.include_router(admin_router)
+app.include_router(invites_router)
+app.include_router(client_team_router)
+app.include_router(client_issues_router)
 
 
 @app.get("/")

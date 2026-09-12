@@ -13,7 +13,7 @@ def get_current_user(
 ):
     """
     Decode the Bearer token and return the corresponding User.
-    Raises HTTP 401 if token is missing, invalid, expired, or user not found.
+    Raises HTTP 401 if token is missing, invalid, expired, or user not found/inactive.
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -35,8 +35,16 @@ def get_current_user(
     user = get_by_id(db, int(user_id))
     if user is None or not user.is_active:
         raise credentials_exception
-    return user
 
+    # Check pending invitation status
+    if hasattr(user, "status") and user.status == "pending":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Account is pending invitation acceptance.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return user
 
 def get_verified_user(user=Depends(get_current_user)):
     """Like get_current_user but also requires email to be verified."""
@@ -47,12 +55,29 @@ def get_verified_user(user=Depends(get_current_user)):
         )
     return user
 
+def require_role(*roles: str):
+    """
+    Dependency factory to check if the current user has one of the allowed roles.
+    Usage:
+        user = Depends(require_role("internal_admin", "internal_member"))
+        user = Depends(require_role("org_admin", "client_member"))
+    """
+    def role_checker(user=Depends(get_verified_user)):
+        if user.role not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"User role '{user.role}' does not have access to this resource.",
+            )
+        return user
+    return role_checker
+
 
 def require_admin(user=Depends(get_verified_user)):
-    """Requires the current user to have the 'admin' role."""
-    if user.role != "admin":
+    """Backwards-compatible check requiring internal admin access."""
+    if user.role not in ("internal_admin", "admin"):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin access required.",
         )
     return user
+
